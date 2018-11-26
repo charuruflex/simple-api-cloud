@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -13,17 +14,50 @@ import (
 	"github.com/gorilla/mux"
 )
 
+var users map[string]string
+
 func updateUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	fmt.Printf("creating/updating user %s\n", vars["username"])
+
+	var body map[string]interface{}
+
+	decoder := json.NewDecoder(r.Body)
+	defer r.Body.Close()
+
+	err := decoder.Decode(&body)
+	switch {
+	case err != nil:
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	case body["dateOfBirth"] == nil:
+		w.WriteHeader(http.StatusNotAcceptable)
+		w.Write([]byte("missing argument dateOfBirth"))
+		return
+	}
+
+	birthday := body["dateOfBirth"].(string)
+	// birthday, _ := time.Parse(time.RFC3339, body["dateOfBirth"].(string))
+	users[vars["username"]] = birthday
+	fmt.Printf("creating/updating user %s %v\n", vars["username"], users[vars["username"]])
+	w.WriteHeader(http.StatusNoContent)
 }
 
 func getUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	fmt.Printf("getting user %s\n", vars["username"])
+	u, b := vars["username"], users[vars["username"]]
+	fmt.Printf("getting user %s, birthday: %s\n", u, b)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(struct {
+		Message string `json:"message"`
+	}{fmt.Sprintf("Hello, %s! Your birthday is %s", u, b)})
 }
 
 func main() {
+	fmt.Println("starting app")
+
+	users = make(map[string]string)
+
 	r := mux.NewRouter()
 
 	r.HandleFunc("/hello/{username}", getUser).Methods("GET")
