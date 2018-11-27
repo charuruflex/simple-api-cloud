@@ -12,51 +12,90 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
+	"github.com/mediocregopher/radix"
 )
 
-var users map[string]string
+var pool, err = radix.NewPool("tcp", "127.0.0.1:6379", 10)
+
+const dateFormat = "2006-01-02"
+
+type msg struct {
+	Message string `json:"message"`
+}
+
+type bDay struct {
+	Birthday *time.Time `json:"dateOfBirth"`
+}
+
+func (b *bDay) UnmarshalJSON(d []byte) error {
+	var bDayTmp struct {
+		Birthday string `json:"dateOfBirth"`
+	}
+
+	err := json.Unmarshal(d, &bDayTmp)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	t, err := time.Parse(dateFormat, bDayTmp.Birthday)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+
+	b.Birthday = &t
+
+	return nil
+}
 
 func updateUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
-	var body map[string]interface{}
+	var bd bDay
 
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
 
-	err := decoder.Decode(&body)
+	err := decoder.Decode(&bd)
 	switch {
 	case err != nil:
+		fmt.Println(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
-	case body["dateOfBirth"] == nil:
+	case bd.Birthday == nil:
 		w.WriteHeader(http.StatusNotAcceptable)
 		w.Write([]byte("missing argument dateOfBirth"))
 		return
 	}
 
-	birthday := body["dateOfBirth"].(string)
-	// birthday, _ := time.Parse(time.RFC3339, body["dateOfBirth"].(string))
-	users[vars["username"]] = birthday
-	fmt.Printf("creating/updating user %s %v\n", vars["username"], users[vars["username"]])
+	pool.Do(radix.Cmd(nil, "SET", vars["username"], (*bd.Birthday).Format(dateFormat)))
+	fmt.Println("creating/updating user", vars["username"], (*bd.Birthday).Format(dateFormat))
 	w.WriteHeader(http.StatusNoContent)
 }
 
 func getUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	u, b := vars["username"], users[vars["username"]]
-	fmt.Printf("getting user %s, birthday: %s\n", u, b)
+	u := vars["username"]
+	var bs string
+	pool.Do(radix.Cmd(&bs, "GET", u))
+
+	b, _ := time.Parse(dateFormat, bs)
+	fmt.Printf("getting user %s, birthday: %s\n", u, b.Format(dateFormat))
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(struct {
-		Message string `json:"message"`
-	}{fmt.Sprintf("Hello, %s! Your birthday is %s", u, b)})
+	json.NewEncoder(w).Encode(msg{fmt.Sprintf("Hello, %s! Your birthday is %s", u, b.Format(dateFormat))})
+
+	// TODO: add case when user doesn't exist
 }
 
 func main() {
 	fmt.Println("starting app")
 
-	users = make(map[string]string)
+	// pool, err = radix.NewPool("tcp", "127.0.0.1:6379", 10)
+	// if err != nil {
+	// 	// handle error
+	// }
 
 	r := mux.NewRouter()
 
