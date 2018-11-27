@@ -24,12 +24,12 @@ type msg struct {
 }
 
 type bDay struct {
-	Birthday *time.Time `json:"dateOfBirth"`
+	DateOfBirth *time.Time `json:"dateOfBirth"`
 }
 
 func (b *bDay) UnmarshalJSON(d []byte) error {
 	var bDayTmp struct {
-		Birthday string `json:"dateOfBirth"`
+		DateOfBirth string `json:"dateOfBirth"`
 	}
 
 	err := json.Unmarshal(d, &bDayTmp)
@@ -38,13 +38,13 @@ func (b *bDay) UnmarshalJSON(d []byte) error {
 		return err
 	}
 
-	t, err := time.Parse(dateFormat, bDayTmp.Birthday)
+	t, err := time.Parse(dateFormat, bDayTmp.DateOfBirth)
 	if err != nil {
 		fmt.Println(err)
 		return err
 	}
 
-	b.Birthday = &t
+	b.DateOfBirth = &t
 
 	return nil
 }
@@ -63,39 +63,52 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 		fmt.Println(err)
 		w.WriteHeader(http.StatusBadRequest)
 		return
-	case bd.Birthday == nil:
+	case bd.DateOfBirth == nil:
 		w.WriteHeader(http.StatusNotAcceptable)
 		w.Write([]byte("missing argument dateOfBirth"))
 		return
 	}
 
-	pool.Do(radix.Cmd(nil, "SET", vars["username"], (*bd.Birthday).Format(dateFormat)))
-	fmt.Println("creating/updating user", vars["username"], (*bd.Birthday).Format(dateFormat))
+	pool.Do(radix.Cmd(nil, "SET", vars["username"], (*bd.DateOfBirth).Format(dateFormat)))
+	fmt.Println("creating/updating user", vars["username"], (*bd.DateOfBirth).Format(dateFormat))
 	w.WriteHeader(http.StatusNoContent)
 }
 
 func getUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
 	vars := mux.Vars(r)
 	u := vars["username"]
-	var bs string
-	pool.Do(radix.Cmd(&bs, "GET", u))
+	var DOFS string
+	pool.Do(radix.Cmd(&DOFS, "GET", u))
 
-	b, _ := time.Parse(dateFormat, bs)
-	fmt.Printf("getting user %s, birthday: %s\n", u, b.Format(dateFormat))
+	if DOFS == "" {
+		w.WriteHeader(http.StatusNotFound)
+		json.NewEncoder(w).Encode(msg{fmt.Sprintf("Hello! Unfortunately I don't know %s yet. Please add his/her date of birth.", u)})
+		return
+	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(msg{fmt.Sprintf("Hello, %s! Your birthday is %s", u, b.Format(dateFormat))})
+	dateOfBirth, _ := time.Parse(dateFormat, DOFS)
+	fmt.Printf("getting user %s, date of birth: %s\n", u, dateOfBirth.Format(dateFormat))
 
-	// TODO: add case when user doesn't exist
+	now := time.Now()
+	birthday := time.Date(now.Year(), dateOfBirth.Month(), dateOfBirth.Day(), 0, 0, 0, 0, now.Location())
+	if now.After(birthday) {
+		birthday = time.Date(now.Year()+1, dateOfBirth.Month(), dateOfBirth.Day(), 0, 0, 0, 0, now.Location())
+	}
+	daysBeforeBDay := int(birthday.Sub(now).Round(time.Hour).Hours()) / 24
+
+	switch {
+	case daysBeforeBDay == 0:
+		json.NewEncoder(w).Encode(msg{fmt.Sprintf("Hello, %s! Happy birthday!", u)})
+	default:
+		json.NewEncoder(w).Encode(msg{fmt.Sprintf("Hello, %s! Your birthday is in %d days", u, daysBeforeBDay)})
+	}
+
 }
 
 func main() {
 	fmt.Println("starting app")
-
-	// pool, err = radix.NewPool("tcp", "127.0.0.1:6379", 10)
-	// if err != nil {
-	// 	// handle error
-	// }
 
 	r := mux.NewRouter()
 
