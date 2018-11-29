@@ -15,7 +15,13 @@ import (
 	"github.com/mediocregopher/radix"
 )
 
-var pool, err = radix.NewPool("tcp", "127.0.0.1:6379", 10)
+var pool *radix.Pool
+var conf config
+
+type config struct {
+	Port  int
+	Redis string
+}
 
 const dateFormat = "2006-01-02"
 
@@ -101,6 +107,8 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case daysBeforeBDay == 0:
 		json.NewEncoder(w).Encode(msg{fmt.Sprintf("Hello, %s! Happy birthday!", u)})
+	case daysBeforeBDay == 1:
+		json.NewEncoder(w).Encode(msg{fmt.Sprintf("Hello, %s! Your birthday is in %d day", u, daysBeforeBDay)})
 	default:
 		json.NewEncoder(w).Encode(msg{fmt.Sprintf("Hello, %s! Your birthday is in %d days", u, daysBeforeBDay)})
 	}
@@ -109,6 +117,13 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	fmt.Println("starting app")
+	conf = config{Port: 8000, Redis: "193.70.0.76:6379"}
+
+	pool, _ = radix.NewPool("tcp", conf.Redis, 10)
+	defer pool.Close()
+	// if err != nil {
+	// 	fmt.Println(err)
+	// }
 
 	r := mux.NewRouter()
 
@@ -120,7 +135,7 @@ func main() {
 	flag.Parse()
 
 	srv := &http.Server{
-		Addr: "0.0.0.0:8000",
+		Addr: fmt.Sprintf("0.0.0.0:%d", conf.Port),
 		// Good practice to set timeouts to avoid Slowloris attacks.
 		WriteTimeout: time.Second * 15,
 		ReadTimeout:  time.Second * 15,
