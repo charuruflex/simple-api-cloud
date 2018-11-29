@@ -115,6 +115,12 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 
 }
 
+func info(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	hostname, _ := os.Hostname()
+	json.NewEncoder(w).Encode(map[string]string{"app": "simple-api-cloud", "version": "0.1.0", "hostname": hostname})
+}
+
 func main() {
 	fmt.Println("starting app")
 	conf = config{Port: 8000, Redis: "193.70.0.76:6379"}
@@ -127,6 +133,7 @@ func main() {
 
 	r := mux.NewRouter()
 
+	r.HandleFunc("/", info).Methods("GET")
 	r.HandleFunc("/hello/{username}", getUser).Methods("GET")
 	r.HandleFunc("/hello/{username}", updateUser).Methods("PUT")
 
