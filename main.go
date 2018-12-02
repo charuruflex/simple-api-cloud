@@ -17,6 +17,7 @@ import (
 
 var pool *radix.Pool
 var conf config
+var version string
 
 type config struct {
 	Port  int
@@ -118,7 +119,7 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 func info(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	hostname, _ := os.Hostname()
-	json.NewEncoder(w).Encode(map[string]string{"app": "simple-api-cloud", "version": "0.1.0", "hostname": hostname})
+	json.NewEncoder(w).Encode(map[string]string{"app": "simple-api-cloud", "version": version, "hostname": hostname})
 }
 
 func main() {

@@ -10,7 +10,7 @@ install:
 test: install
 	go test ./...
 
-build: #install
+build: install
 	go build -ldflags "-X main.version=$(TAG)" -o bin/api .
 
 serve: build
