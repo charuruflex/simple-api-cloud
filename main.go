@@ -78,10 +78,11 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 	case err != nil:
 		fmt.Println(err)
 		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(msg{fmt.Sprintf("bad date format for dateOfBirth: %v", err)})
 		return
 	case bd.DateOfBirth == nil:
 		w.WriteHeader(http.StatusNotAcceptable)
-		w.Write([]byte("missing argument dateOfBirth"))
+		json.NewEncoder(w).Encode(msg{"missing argument dateOfBirth"})
 		return
 	}
 
