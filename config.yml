@@ -1,7 +1,8 @@
+---
 server:
   writetimeout: 15s
   readtimeout: 15s
   idletimeout: 60s
-  port: ":8080"
+  addr: ":8000"
 database:
   redis: "193.70.0.76:6379"
