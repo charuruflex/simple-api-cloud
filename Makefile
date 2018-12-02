@@ -14,7 +14,7 @@ build: install
 	go build -ldflags "-X main.version=$(TAG)" -o bin/api .
 
 serve: build
-	bin/api
+	bin/api -config config.yml
 
 clean:
 	rm bin/api
