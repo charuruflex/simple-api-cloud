@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -13,15 +14,23 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/mediocregopher/radix"
+	yaml "gopkg.in/yaml.v2"
 )
 
 var pool *radix.Pool
 var conf config
-var version string
+var version = "new"
 
 type config struct {
-	Port  int
-	Redis string
+	Database struct {
+		Redis string
+	}
+	Server struct {
+		Addr         string
+		ReadTimeout  time.Duration
+		WriteTimeout time.Duration
+		IdleTimeout  time.Duration
+	}
 }
 
 const dateFormat = "2006-01-02"
@@ -122,18 +131,44 @@ func info(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"app": "simple-api-cloud", "version": version, "hostname": hostname})
 }
 
+func loadConfig(file string) (cfg config, err error) {
+	cfg.Server.Addr = ":8080"
+	cfg.Server.WriteTimeout = time.Second * 15
+	cfg.Server.ReadTimeout = time.Second * 15
+	cfg.Server.IdleTimeout = time.Second * 60
+	cfg.Database.Redis = "193.70.0.76:6379"
+
+	data, err := ioutil.ReadFile(file)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	if err = yaml.Unmarshal(data, &cfg); err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	return
+}
+
 func main() {
 	fmt.Println("starting app")
-	conf = config{Port: 8000, Redis: "193.70.0.76:6379"}
+	filename := flag.String("config", "config.yml", "Configuration file")
+	flag.Parse()
 
-	pool, _ = radix.NewPool("tcp", conf.Redis, 10)
+	conf, err := loadConfig(*filename)
+	if err != nil {
+		log.Fatalf("failed to load configuration: %v", err)
+	}
+
+	pool, err = radix.NewPool("tcp", conf.Database.Redis, 10)
+	if err != nil {
+		panic(err)
+	}
 	defer pool.Close()
-	// if err != nil {
-	// 	fmt.Println(err)
-	// }
 
 	r := mux.NewRouter()
-
 	r.HandleFunc("/", info).Methods("GET")
 	r.HandleFunc("/hello/{username}", getUser).Methods("GET")
 	r.HandleFunc("/hello/{username}", updateUser).Methods("PUT")
@@ -143,11 +178,11 @@ func main() {
 	flag.Parse()
 
 	srv := &http.Server{
-		Addr: fmt.Sprintf("0.0.0.0:%d", conf.Port),
+		Addr: fmt.Sprintf("%s", conf.Server.Addr),
 		// Good practice to set timeouts to avoid Slowloris attacks.
-		WriteTimeout: time.Second * 15,
-		ReadTimeout:  time.Second * 15,
-		IdleTimeout:  time.Second * 60,
+		WriteTimeout: conf.Server.WriteTimeout,
+		ReadTimeout:  conf.Server.ReadTimeout,
+		IdleTimeout:  conf.Server.IdleTimeout,
 		Handler:      r, // Pass our instance of gorilla/mux in.
 	}
 
