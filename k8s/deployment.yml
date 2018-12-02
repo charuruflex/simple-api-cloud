@@ -1,0 +1,36 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: simple-api-cloud
+  labels: {app: simple-api-cloud}
+spec:
+  replicas: 2
+  template:
+    metadata: {labels: {app: simple-api-cloud}}
+    spec:
+      containers:
+      - name: news
+        image: gcr.io/revolut-sre-challenge/simple-api-cloud:${TAG}
+        command:
+        ports:
+          - containerPort: 8000
+        # volumeMounts:
+        #   - name: news-config
+        #     mountPath: /etc/news/
+        #     readOnly: true
+      # volumes:
+      #   - name: news-config
+      #     configMap: { name: news-config }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: simple-api-cloud
+spec:
+  type: LoadBalancer
+  selector:
+    app: simple-api-cloud
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8000
