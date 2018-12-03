@@ -4,5 +4,5 @@ server:
   readtimeout: 15s
   idletimeout: 60s
   addr: ":8000"
-database:
-  redis: "REDIS_MASTER_SERVICE_HOST"
+# database:
+#   redis: "193.70.0.76:6379"

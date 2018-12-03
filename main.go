@@ -137,7 +137,7 @@ func loadConfig(file string) (cfg config, err error) {
 	cfg.Server.WriteTimeout = time.Second * 15
 	cfg.Server.ReadTimeout = time.Second * 15
 	cfg.Server.IdleTimeout = time.Second * 60
-	cfg.Database.Redis = "193.70.0.76:6379"
+	cfg.Database.Redis = os.Getenv("REDIS_MASTER_SERVICE_HOST")
 
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
