@@ -22,10 +22,12 @@ clean:
 pack:
 	GOOS=linux make build
 	docker build -t gcr.io/revolut-sre-challenge/simple-api-cloud:$(TAG) .
+	docker build -t gcr.io/revolut-sre-challenge/redis-slave:$(TAG) redis-slave
 
 upload:
 	# gcloud docker -- push gcr.io/revolut-sre-challenge/simple-api-cloud:$(TAG)
 	docker push gcr.io/revolut-sre-challenge/simple-api-cloud:$(TAG)
+	docker push gcr.io/revolut-sre-challenge/redis-slave:$(TAG)
 
 deploy:
 	envsubst < k8s/deployment.yml | kubectl apply -f -

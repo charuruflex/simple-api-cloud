@@ -16,7 +16,7 @@ spec:
     tier: db
 
 ---
-apiVersion: apps/v1
+apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
   name: redis-master
@@ -36,12 +36,13 @@ spec:
     spec:
       containers:
       - name: master
-        image: k8s.gcr.io/redis:e2e
+        image: redis:3.2-alpine
         resources:
           requests:
             cpu: 100m
             memory: 100Mi
         ports:
+        args: ["--appendonly", "yes", "--save", "900", "1", "--save", "30", "2"]
         - containerPort: 6379
 
 ---
@@ -63,7 +64,7 @@ spec:
     tier: db
 
 ---
-apiVersion: apps/v1
+apiVersion: apps/v1beta2
 kind: Deployment
 metadata:
   name: redis-slave
@@ -83,7 +84,7 @@ spec:
     spec:
       containers:
       - name: slave
-        image: gcr.io/google_samples/gb-redisslave:v1
+        image: gcr.io/revolut-sre-challenge/redis-slave:${TAG}
         resources:
           requests:
             cpu: 100m
@@ -93,6 +94,7 @@ spec:
           value: dns
         ports:
         - containerPort: 6379
+        args: ["--appendonly", "yes", "--save", "900", "1", "--save", "30", "2"]
 
 ---
 apiVersion: v1
