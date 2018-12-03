@@ -144,8 +144,8 @@ func loadConfig(file string) (cfg config, err error) {
 		cfg.Database.RedisMaster = fmt.Sprintf("%s:%s", os.Getenv("REDIS_MASTER_SERVICE_HOST"), os.Getenv("REDIS_MASTER_SERVICE_PORT"))
 		cfg.Database.RedisSlave = fmt.Sprintf("%s:%s", os.Getenv("REDIS_SLAVE_SERVICE_HOST"), os.Getenv("REDIS_SLAVE_SERVICE_PORT"))
 	} else {
-		cfg.Database.RedisMaster = "redis-master:3679"
-		cfg.Database.RedisSlave = "redis-slave:3679"
+		cfg.Database.RedisMaster = "redis-master:6379"
+		cfg.Database.RedisSlave = "redis-slave:6379"
 	}
 
 	data, err := ioutil.ReadFile(file)
