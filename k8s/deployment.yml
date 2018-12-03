@@ -1,26 +1,44 @@
-apiVersion: apps/v1beta1
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-master
+  labels:
+    app: redis
+    role: master
+    tier: db
+spec:
+  ports:
+  - port: 6379
+    targetPort: 6379
+  selector:
+    app: redis
+    role: master
+    tier: db
+
+---
+apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
-  name: simple-api-cloud
-  labels: {app: simple-api-cloud}
+  name: redis-master
 spec:
-  replicas: 2
+  replicas: 1
   template:
-    metadata: {labels: {app: simple-api-cloud}}
+    metadata:
+      labels:
+        app: redis
+        role: master
+        tier: db
     spec:
       containers:
-      - name: news
-        image: gcr.io/revolut-sre-challenge/simple-api-cloud:${TAG}
-        command:
+      - name: master
+        image: k8s.gcr.io/redis:e2e
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
         ports:
-          - containerPort: 8000
-        # volumeMounts:
-        #   - name: news-config
-        #     mountPath: /etc/news/
-        #     readOnly: true
-      # volumes:
-      #   - name: news-config
-      #     configMap: { name: news-config }
+        - containerPort: 6379
+
 ---
 apiVersion: v1
 kind: Service
@@ -34,3 +52,24 @@ spec:
   - protocol: TCP
     port: 80
     targetPort: 8000
+---
+
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: simple-api-cloud
+spec:
+  replicas: 2
+  template:
+    metadata: 
+      labels: 
+        app: simple-api-cloud
+    spec:
+      containers:
+      - name: news
+        image: gcr.io/revolut-sre-challenge/simple-api-cloud:${TAG}
+        command:
+        ports:
+        - containerPort: 8000
+
+
