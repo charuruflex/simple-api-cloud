@@ -68,6 +68,7 @@ func (b *bDay) UnmarshalJSON(d []byte) error {
 }
 
 func updateUser(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
 	vars := mux.Vars(r)
 
 	var bd bDay
@@ -89,7 +90,6 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	redisMaster.Do(radix.Cmd(nil, "SET", vars["username"], (*bd.DateOfBirth).Format(dateFormat)))
-	fmt.Println("creating/updating user", vars["username"], (*bd.DateOfBirth).Format(dateFormat))
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -139,8 +139,14 @@ func loadConfig(file string) (cfg config, err error) {
 	cfg.Server.WriteTimeout = time.Second * 15
 	cfg.Server.ReadTimeout = time.Second * 15
 	cfg.Server.IdleTimeout = time.Second * 60
-	cfg.Database.RedisMaster = fmt.Sprintf("%s:%s", os.Getenv("REDIS_MASTER_SERVICE_HOST"), os.Getenv("REDIS_MASTER_SERVICE_PORT"))
-	cfg.Database.RedisSlave = fmt.Sprintf("%s:%s", os.Getenv("REDIS_SLAVE_SERVICE_HOST"), os.Getenv("REDIS_SLAVE_SERVICE_PORT"))
+
+	if os.Getenv("GET_HOSTS_FROM") == "env" {
+		cfg.Database.RedisMaster = fmt.Sprintf("%s:%s", os.Getenv("REDIS_MASTER_SERVICE_HOST"), os.Getenv("REDIS_MASTER_SERVICE_PORT"))
+		cfg.Database.RedisSlave = fmt.Sprintf("%s:%s", os.Getenv("REDIS_SLAVE_SERVICE_HOST"), os.Getenv("REDIS_SLAVE_SERVICE_PORT"))
+	} else {
+		cfg.Database.RedisMaster = "redis-master:3679"
+		cfg.Database.RedisSlave = "redis-slave:3679"
+	}
 
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
