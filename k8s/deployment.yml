@@ -68,7 +68,7 @@ spec:
       labels:
         app: redis
         role: slave
-        tier: backend
+        tier: db
     spec:
       containers:
       - name: slave
