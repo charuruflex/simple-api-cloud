@@ -5,4 +5,5 @@ server:
   idletimeout: 60s
   addr: ":8000"
 # database:
-#   redis: "193.70.0.76:6379"
+#   redismaster: ""
+#   redisslave: ""

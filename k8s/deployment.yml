@@ -66,9 +66,9 @@ spec:
         app: simple-api-cloud
     spec:
       containers:
-      - name: news
+      - name: api
         image: gcr.io/revolut-sre-challenge/simple-api-cloud:${TAG}
-        command:
+        # command:
         ports:
         - containerPort: 8000
 

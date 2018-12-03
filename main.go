@@ -17,13 +17,15 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
-var pool *radix.Pool
+var redisMaster *radix.Pool
+var redisSlave *radix.Pool
 var conf config
 var version = "new"
 
 type config struct {
 	Database struct {
-		Redis string
+		RedisMaster string
+		RedisSlave  string
 	}
 	Server struct {
 		Addr         string
@@ -86,7 +88,7 @@ func updateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pool.Do(radix.Cmd(nil, "SET", vars["username"], (*bd.DateOfBirth).Format(dateFormat)))
+	redisMaster.Do(radix.Cmd(nil, "SET", vars["username"], (*bd.DateOfBirth).Format(dateFormat)))
 	fmt.Println("creating/updating user", vars["username"], (*bd.DateOfBirth).Format(dateFormat))
 	w.WriteHeader(http.StatusNoContent)
 }
@@ -97,7 +99,7 @@ func getUser(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	u := vars["username"]
 	var DOFS string
-	pool.Do(radix.Cmd(&DOFS, "GET", u))
+	redisSlave.Do(radix.Cmd(&DOFS, "GET", u))
 
 	if DOFS == "" {
 		w.WriteHeader(http.StatusNotFound)
@@ -137,7 +139,8 @@ func loadConfig(file string) (cfg config, err error) {
 	cfg.Server.WriteTimeout = time.Second * 15
 	cfg.Server.ReadTimeout = time.Second * 15
 	cfg.Server.IdleTimeout = time.Second * 60
-	cfg.Database.Redis = fmt.Sprintf("%s:%s", os.Getenv("REDIS_MASTER_SERVICE_HOST"), os.Getenv("REDIS_MASTER_SERVICE_PORT"))
+	cfg.Database.RedisMaster = fmt.Sprintf("%s:%s", os.Getenv("REDIS_MASTER_SERVICE_HOST"), os.Getenv("REDIS_MASTER_SERVICE_PORT"))
+	cfg.Database.RedisSlave = fmt.Sprintf("%s:%s", os.Getenv("REDIS_SLAVE_SERVICE_HOST"), os.Getenv("REDIS_SLAVE_SERVICE_PORT"))
 
 	data, err := ioutil.ReadFile(file)
 	if err != nil {
@@ -163,11 +166,17 @@ func main() {
 		log.Fatalf("failed to load configuration: %v", err)
 	}
 
-	pool, err = radix.NewPool("tcp", conf.Database.Redis, 10)
+	redisMaster, err = radix.NewPool("tcp", conf.Database.RedisMaster, 10)
 	if err != nil {
 		panic(err)
 	}
-	defer pool.Close()
+	defer redisMaster.Close()
+
+	redisSlave, err = radix.NewPool("tcp", conf.Database.RedisSlave, 10)
+	if err != nil {
+		panic(err)
+	}
+	defer redisSlave.Close()
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", info).Methods("GET")
