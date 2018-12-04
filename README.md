@@ -1,2 +1,2 @@
 # simple-api-cloud
-Hello World API in golang using Docker and configuration for AWS/GCP
+Hello World API in golang using Kubernetes and configuration for GCP
