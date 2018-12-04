@@ -135,6 +135,10 @@ spec:
       containers:
       - name: api-app
         image: gcr.io/revolut-sre-challenge/simple-api-cloud:${TAG}
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
         ports:
         - containerPort: 8000
 
