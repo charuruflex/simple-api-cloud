@@ -92,7 +92,7 @@ spec:
     spec:
       containers:
       - name: slave
-        image: gcr.io/revolut-sre-challenge/redis-slave:${TAG}
+        image: gcr.io/revolut-sre-challenge/redis-slave:v2
         resources:
           requests:
             cpu: 100m
