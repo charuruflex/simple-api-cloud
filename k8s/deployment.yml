@@ -134,7 +134,7 @@ kind: Deployment
 metadata:
   name: simple-api
 spec:
-  replicas: 20
+  replicas: 4
   selector:
     matchLabels:
       app: simple-api
