@@ -23,7 +23,7 @@ Hello World API in golang using Kubernetes and configuration for GCP
 ## API
 - GET `/`: some informations on the instance
   - `{"app":"simple-api-cloud","hostname":"simple-api-55f76f9647-n8pxf","version":"70ad329"}`
-- GET `/hello/Charles`: get birthday message for Charles 
+- GET `/hello/Charles`: get birthday message for Charles (number of days till birthday, considering UTC)
     - normal case: `{"message": "Hello Charles! Your birthday is in 300 days"}`
     - when it's Charles' birthday: `{"message": "Hello Charles! Happy birthday!"}`
     - if Charles' birthday is unknown: `{"message":"Hello! Unfortunately I don't know Charles yet. Please add his/her date of birth."}`
@@ -37,7 +37,9 @@ HTTP and HTTPS live versions are available
 - https://revolut-sre.franceskinj.fr
 
 ## TODO
-- Date: 
-- Spanner:
-- Use Autoscaling with Custom Metrics
+- Use a container for building the API
+- Date: a more precise date format can be used: `YYYY-MM-DD hh:mm:ss`. The date will be always considered UTC. If the hour is not mentioned, it will default to 00:00:00 of the given date.
+- Spanner: more adapted with a financial context. Plus, it's all ready for scalability, availability, performance, multi-regions and totally managed. The only drawback is price...
+- Stackdriver: for monitoring the whole stack
+- Use Autoscaling with Custom Metrics: adapts automagically if the load goes up.
 - Use Spinnaker for continuous delivery
