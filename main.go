@@ -22,6 +22,8 @@ var redisSlave *radix.Pool
 var conf config
 var version = "new"
 
+const dateFormat = "2006-01-02"
+
 type config struct {
 	Database struct {
 		RedisMaster string
@@ -34,8 +36,6 @@ type config struct {
 		IdleTimeout  time.Duration
 	}
 }
-
-const dateFormat = "2006-01-02"
 
 type msg struct {
 	Message string `json:"message"`
@@ -70,7 +70,6 @@ func (b *bDay) UnmarshalJSON(d []byte) error {
 func updateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	vars := mux.Vars(r)
-
 	var bd bDay
 
 	decoder := json.NewDecoder(r.Body)
@@ -134,7 +133,7 @@ func info(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"app": "simple-api-cloud", "version": version, "hostname": hostname})
 }
 
-func loadConfig(file string) (cfg config, err error) {
+func loadConfig(file string) (cfg config) {
 	cfg.Server.Addr = ":8080"
 	cfg.Server.WriteTimeout = time.Second * 15
 	cfg.Server.ReadTimeout = time.Second * 15
@@ -167,11 +166,9 @@ func main() {
 	filename := flag.String("config", "config.yml", "Configuration file")
 	flag.Parse()
 
-	conf, err := loadConfig(*filename)
-	if err != nil {
-		log.Fatalf("failed to load configuration: %v", err)
-	}
+	conf := loadConfig(*filename)
 
+	var err error
 	redisMaster, err = radix.NewPool("tcp", conf.Database.RedisMaster, 10)
 	if err != nil {
 		panic(err)
