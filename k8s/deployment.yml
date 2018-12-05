@@ -1,4 +1,16 @@
 apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: redis-master-disk
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+---      
+apiVersion: v1
 kind: Service
 metadata:
   name: redis-master
@@ -49,9 +61,8 @@ spec:
               mountPath: /data
       volumes:
         - name: redis-master-volume
-          gcePersistentDisk:
-            pdName: redis-disk
-            fsType: ext4
+          persistentVolumeClaim:
+            claimName: redis-master-disk
 
 ---
 apiVersion: v1
@@ -123,7 +134,7 @@ kind: Deployment
 metadata:
   name: simple-api
 spec:
-  replicas: 2
+  replicas: 20
   selector:
     matchLabels:
       app: simple-api
