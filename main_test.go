@@ -40,7 +40,6 @@ func initLocalRedis(rType string) (err error) {
 		redisSlave, err = radix.NewPool("tcp", localRedis, 10)
 
 	}
-
 	if err != nil {
 		err = fmt.Errorf("fail to connect to local redis %s: %v", localRedis, err)
 	}
