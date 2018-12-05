@@ -175,7 +175,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println("connected to redis master:", redisMaster)
+	fmt.Println("connected to redis master:", conf.Database.RedisMaster)
 
 	defer redisMaster.Close()
 
@@ -184,7 +184,7 @@ func main() {
 		panic(err)
 	}
 	defer redisSlave.Close()
-	fmt.Println("connected to redis slave:", redisSlave)
+	fmt.Println("connected to redis slave:", conf.Database.RedisSlave)
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", info).Methods("GET")
