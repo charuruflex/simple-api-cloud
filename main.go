@@ -168,11 +168,15 @@ func main() {
 
 	conf := loadConfig(*filename)
 
+	fmt.Println("config:", conf)
+
 	var err error
 	redisMaster, err = radix.NewPool("tcp", conf.Database.RedisMaster, 10)
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println("connected to redis master:", redisMaster)
+
 	defer redisMaster.Close()
 
 	redisSlave, err = radix.NewPool("tcp", conf.Database.RedisSlave, 10)
@@ -180,6 +184,7 @@ func main() {
 		panic(err)
 	}
 	defer redisSlave.Close()
+	fmt.Println("connected to redis slave:", redisSlave)
 
 	r := mux.NewRouter()
 	r.HandleFunc("/", info).Methods("GET")
@@ -191,7 +196,7 @@ func main() {
 	flag.Parse()
 
 	srv := &http.Server{
-		Addr: fmt.Sprintf("%s", conf.Server.Addr),
+		Addr: conf.Server.Addr,
 		// Good practice to set timeouts to avoid Slowloris attacks.
 		WriteTimeout: conf.Server.WriteTimeout,
 		ReadTimeout:  conf.Server.ReadTimeout,
@@ -203,6 +208,7 @@ func main() {
 		if err := srv.ListenAndServe(); err != nil {
 			log.Println(err)
 		}
+		fmt.Println("listening request on", conf.Server.Addr)
 	}()
 
 	c := make(chan os.Signal, 1)
