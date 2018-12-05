@@ -35,7 +35,7 @@ Follow this guide to use Letsencrypt: https://github.com/ahmetb/gke-letsencrypt
     - req: `{"dateOfBirth": "1988-12-01"}` with date format YYYY-MM-DD
 
 ## Deployed version on GCP
-HTTP and HTTPS live versions are available
+A live demo is available here:
 - http://revolut-sre.franceskinj.fr
 - https://revolut-sre.franceskinj.fr
 
