@@ -32,7 +32,7 @@ func TestUnmarshalBDay(t *testing.T) {
 
 func initLocalRedis(rType string) (err error) {
 	localRedis := "127.0.0.1:6379"
-	// var err error
+
 	switch rType {
 	case "master":
 		redisMaster, err = radix.NewPool("tcp", localRedis, 10)
