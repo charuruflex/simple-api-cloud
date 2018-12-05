@@ -6,6 +6,7 @@ Hello World API in golang using Kubernetes and configuration for GCP
 ## How to start
 
 ## API
+/hello/username
 
 ## Testing
 A local redis instance is needed to complete tests
@@ -16,3 +17,5 @@ https://revolut-sre.franceskinj.fr
 ## TODO
 - Date
 - Spanner
+- Use Autoscaling with Custom Metrics
+- Use Spinnaker for continuous delivery
