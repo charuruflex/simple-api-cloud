@@ -20,6 +20,9 @@ Hello World API in golang using Kubernetes and configuration for GCP
     - send docker image on registry
     - launch `k8s/deployment.yml` on the configured Kubernetes cluster
 
+## HTTPS
+Follow this guide to use Letsencrypt: https://github.com/ahmetb/gke-letsencrypt
+
 ## API
 - GET `/`: some informations on the instance
   - `{"app":"simple-api-cloud","hostname":"simple-api-55f76f9647-n8pxf","version":"70ad329"}`
