@@ -40,6 +40,7 @@ A live demo is available here:
 - https://revolut-sre.franceskinj.fr
 
 ## TODO
+- Issue with Redis: when deleting Redis pods, no connection lost events are thrown and the API never reconnects to new Redis instances..
 - Use a container for building the API
 - Date: a more precise date format can be used: `YYYY-MM-DD hh:mm:ss`. The date will be always considered UTC. If the hour is not mentioned, it will default to 00:00:00 of the given date. The date will be stored as unix timestamp.
 - Spanner: more adapted with a financial context. Plus, it's all ready for scalability, availability, performance, multi-regions and totally managed. The only drawback is price...
