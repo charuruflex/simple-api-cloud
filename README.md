@@ -36,8 +36,8 @@ Follow this guide to use Letsencrypt: https://github.com/ahmetb/gke-letsencrypt
 
 ## Deployed version on GCP
 A live demo is available here:
-- http://revolut-sre.franceskinj.fr
-- https://revolut-sre.franceskinj.fr
+- ~~http://revolut-sre.franceskinj.fr~~
+- ~~https://revolut-sre.franceskinj.fr~~
 
 ## TODO
 - Issue with Redis: when deleting Redis pods, no connection lost events are thrown and the API never reconnects to new Redis instances..
